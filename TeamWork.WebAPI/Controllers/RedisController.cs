@@ -1,10 +1,19 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
+using System.Threading.Tasks;
 
 namespace TeamWork.WebAPI.Controllers
 {
     public class RedisController : Controller
     {
+        static readonly ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("redis-16532.c251.east-us-mz.azure.redns.redis-cloud.com:16532,password=kuLu8SrX5mvhtwYaSxf8TZNsl4fJFW96");
+
+        public RedisController()
+        {
+            var db = redis.GetDatabase();
+        }
+
         // GET: RedisController
         public ActionResult Index()
         {
@@ -26,10 +35,20 @@ namespace TeamWork.WebAPI.Controllers
         // POST: RedisController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult> Create(IFormCollection collection)
         {
             try
             {
+                // Example data from form
+                string key = collection["key"];
+                string value = collection["value"];
+
+                // Get the Redis database
+                var db = redis.GetDatabase();
+
+                // Set the key-value pair in Redis
+                await db.StringSetAsync(key, value);
+
                 return RedirectToAction(nameof(Index));
             }
             catch

@@ -7,7 +7,6 @@ namespace TeamWork.ClientApp.Models
 {
     public class CustomIdentityUser : IdentityUser<string>
     {
-        public string? FullName { get; set; }
         public DateTime BirthDate { get; set; }
         public string? City { get; set; }
         public int SeriaNo { get; set; }

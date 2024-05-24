@@ -13,11 +13,14 @@ namespace TeamWork.WebAPI.Controllers
     public class RabbitMQController : ControllerBase
     {
         private readonly string _queueName = "team-queue";
-        private readonly ConnectionFactory _factory;
+        public readonly ConnectionFactory _factory;
+        public static IConnection connection;
 
         public RabbitMQController()
         {
-            _factory = new ConnectionFactory() { HostName = "amqps://bvpfaljc:C-0cjkCgLjHksx-723tnlsPbkKVvV6yE@roedeer.rmq.cloudamqp.com/bvpfaljc" };
+            var factory = new ConnectionFactory();
+            factory.Uri = new Uri("amqps://qnejkvdd:BOTp5tIBwJeUrHGbAiYIBfF_SS-63oYV@cow.rmq2.cloudamqp.com/qnejkvdd");
+            connection = factory.CreateConnection();
         }
 
         // GET: api/<RabbitMQController>
@@ -58,7 +61,6 @@ namespace TeamWork.WebAPI.Controllers
         {
             var messages = new List<string>();
 
-            using (var connection = _factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
                 var result = channel.BasicGet(_queueName, true);
@@ -78,21 +80,28 @@ namespace TeamWork.WebAPI.Controllers
         [HttpGet]
         private void SendMessageToQueue(string message)
         {
-            using (var connection = _factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            try
             {
-                channel.QueueDeclare(queue: _queueName,
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+                using (var channel = connection.CreateModel())
+                {
+                    channel.QueueDeclare(queue: _queueName,
+                     durable: true, 
+                     exclusive: false,
+                     autoDelete: false,
+                     arguments: null);
 
-                var body = Encoding.UTF8.GetBytes(message);
 
-                channel.BasicPublish(exchange: "",
-                                     routingKey: _queueName,
-                                     basicProperties: null,
-                                     body: body);
+                    var body = Encoding.UTF8.GetBytes(message);
+
+                    channel.BasicPublish(exchange: "",
+                                         routingKey: _queueName,
+                                         basicProperties: null,
+                                         body: body);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending message to queue: {ex.Message}");
             }
         }
     }
